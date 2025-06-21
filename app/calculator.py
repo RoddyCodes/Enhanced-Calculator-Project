@@ -63,29 +63,3 @@ class Calculator:
              self.restore_from_memento(memento)
         else:
             print("Nothing to redo.")
-
-
-# --- Example Usage (for testing purposes) ---
-if __name__ == '__main__': #pragma: no cover
-    calc = Calculator()
-    
-    # Perform some calculations
-    calc.execute_operation('add', 10, 5)      # Result: 15
-    print(f"Current result: {calc._current_result}")
-    calc.execute_operation('subtract', 15, 3)  # Result: 12
-    print(f"Current result: {calc._current_result}")
-    
-    # Undo the last operation
-    calc.undo() # Should restore state to 15
-    
-    # Undo again
-    calc.undo() # Should restore state to 0 (initial state)
-    
-    # Redo an operation
-    calc.redo() # Should restore state to 15
-    
-    # Redo again
-    calc.redo() # Should restore state to 12
-    
-    # Try to redo again (should do nothing)
-    calc.redo()
