@@ -84,6 +84,13 @@ def test_modulus_operation(a, b, expected):
     """Test the Modulus operation."""
     mod_op = Modulus()
     assert mod_op.calculate(a, b) == expected
+    
+def test_modulus_operation_by_zero():
+    """Test that the Modulus operation correctly raises a ValueError when b is zero."""
+    mod_op = Modulus()
+    with pytest.raises(ValueError, match="Cannot perform modulus with zero."):
+        # This line will trigger the error and the test will pass because it's expected.
+        mod_op.calculate(10, 0)
 
 def test_integer_divide_operation():
     """Test the IntegerDivide operation."""
