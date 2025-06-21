@@ -1,0 +1,13 @@
+# requirements.txt
+
+# For loading environment variables from the .env file
+python-dotenv
+
+# For saving and loading calculation history to CSV files
+pandas
+
+# The framework for writing and running unit tests
+pytest
+
+# A plugin for pytest to measure test coverage
+pytest-cov
