@@ -1,4 +1,3 @@
-# tests/test_calculator.py
 
 import pytest
 from app.calculator import Calculator
@@ -94,4 +93,29 @@ def test_execute_operation_error(calculator_fixture):
     # when we perform an invalid operation (division by zero).
     with pytest.raises(ValueError, match="Cannot divide by zero."):
         calc.execute_operation('divide', 10, 0)
+
+def test_unregister_observer(calculator_fixture):
+    """
+    Tests both successful and unsuccessful unregistering of an observer.
+    This test will cover the full try...except block in unregister_observer.
+    """
+    # Create a dummy observer class just for this test
+    class DummyObserver:
+        def update(self, subject):
+            pass
+
+    observer_to_remove = DummyObserver()
+    calculator = calculator_fixture
+
+    # --- Test 1: Successful unregister ---
+    calculator.register_observer(observer_to_remove)
+    assert observer_to_remove in calculator._observers # Confirm it's there
+    
+    # This will execute the 'try' block
+    calculator.unregister_observer(observer_to_remove)
+    assert observer_to_remove not in calculator._observers # Confirm it's gone
+
+    # --- Test 2: Unregistering an observer that doesn't exist ---
+    # This will execute the 'except ValueError' block, giving you 100% coverage
+    calculator.unregister_observer(observer_to_remove)
         

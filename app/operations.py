@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 #base class for all arithmetic operations
 class Operation(ABC):
     @abstractmethod
-
     def calculate(self, a, b):
         """
         performs the calculation
@@ -14,8 +13,7 @@ class Operation(ABC):
         Returns:
             result(float)
         """
-
-    pass
+        pass # pragma: no cover
 
 class Add(Operation):
     """
@@ -86,6 +84,9 @@ class IntegerDivide(Operation):
 
     """
     def calculate(self, a,b):
+        # check for division by 0
+        if b == 0:
+            raise ValueError("Cannot perform integer division by zero.")
         return a // b
     
 class Percentage(Operation):
@@ -94,6 +95,9 @@ class Percentage(Operation):
 
     """
     def calculate(self, a,b):
+        # check for division by 0
+        if b == 0:
+            raise ValueError("Cannot calculate percentage with zero as the denominator.")
         return (a/b) * 100
     
 class AbsoluteDifference(Operation):
@@ -144,5 +148,3 @@ class OperationFactory:
         if not operation_class:
             raise ValueError(f"Unknown operation: {operation_name}")
         return operation_class()
-    
-
