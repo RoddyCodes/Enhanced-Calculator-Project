@@ -2,10 +2,12 @@
 
 import sys
 import pandas as pd
+import ast # Used for safely evaluating string representations of data structures
+from datetime import datetime 
 from app.calculator import Calculator
 from app.logger import LoggingObserver, AutoSaveObserver
 from app.calculator_config import config
-from app.operations import OperationFactory, Operation
+from app.operations import OperationFactory
 from app.calculation import Calculation
 
 class App:
@@ -14,18 +16,14 @@ class App:
         self.calculator = Calculator()
         self.history = [] # To store Calculation objects
         
-        # Dependency Injection: Pass the config to the observers
         self.logger = LoggingObserver(config)
         self.auto_saver = AutoSaveObserver(config)
         
-        # Register the observers
         self.calculator.register_observer(self.logger)
         self.calculator.register_observer(self.auto_saver)
         
-        # A set of known calculation command names for easy lookup
         self.calculation_commands = {'add', 'subtract', 'multiply', 'divide', 'power', 'root', 'modulus', 'int_divide', 'percent', 'abs_diff'}
 
-        # A dictionary mapping command names to their handler methods
         self.commands = {
             "exit": self._exit_app,
             "help": self._show_help,
@@ -61,8 +59,8 @@ class App:
 
             except KeyboardInterrupt:
                 self._exit_app()
-            except Exception as e: #pragma: no cover
-                print(f"An error occurred: {e}")
+            except Exception as e:
+                print(f"An error occurred: {e}") #pragma: no cover
 
     def _perform_calculation(self, command_name, args):
         """Handles all calculation commands."""
@@ -72,8 +70,6 @@ class App:
         
         try:
             a, b = map(float, args)
-            # For example: if a > config.max_input_value or b > config.max_input_value: ...
-            
             calculation = self.calculator.execute_operation(command_name, a, b)
             self.history.append(calculation)
             print(f"Result: {calculation.result}")
@@ -90,7 +86,7 @@ class App:
             return
         print("\nCalculation History:")
         for calc in self.history:
-            print(f"  - {calc}") # Uses the __str__ method of Calculation
+            print(f"  - {calc}")
 
     def _clear_history(self, args=None):
         """Clears the current session's history."""
@@ -101,7 +97,7 @@ class App:
         """Undoes the last calculation."""
         if self.history:
             self.calculator.undo()
-            self.history.pop() # Remove the last calculation from the history list
+            self.history.pop()
         else:
             print("No operation to undo.")
 
@@ -116,11 +112,12 @@ class App:
             return
 
         file_path = config.get_history_file_path("manual_history.csv")
+        # Prepare data according to the requirement: operation, operands, result, timestamp
         history_data = [
             {
+                "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "Operation": calc.operation.__class__.__name__,
-                "Operand_A": calc.a,
-                "Operand_B": calc.b,
+                "Operands": (calc.a, calc.b), # Store operands as a tuple
                 "Result": calc.result
             } for calc in self.history
         ]
@@ -140,11 +137,14 @@ class App:
             self.history.clear()
             for index, row in df.iterrows():
                 op_name_class = row['Operation']
-                # Convert 'AddOperation' back to 'add' for the factory
                 op_name_str = op_name_class.replace('Operation', '').lower()
                 op_instance = OperationFactory.create_operation(op_name_str)
 
-                calc = Calculation(row['Operand_A'], row['Operand_B'], op_instance, row['Result'])
+                # Safely parse the 'Operands' string back into a tuple
+                operands_tuple = ast.literal_eval(row['Operands'])
+                a, b = operands_tuple
+
+                calc = Calculation(a, b, op_instance, row['Result'])
                 self.history.append(calc)
             
             print(f"History successfully loaded from {file_path}")
@@ -163,10 +163,10 @@ class App:
     def _show_help(self, args=None):
         """Displays the help message with available commands."""
         print("\nAvailable Commands:")
-        print("  - add/subtract/multiply/divide/power/root/modulus/int_divide/percent/abs_diff <num1> <num2>")
+        print("  - add/subtract/multiply/divide... <num1> <num2>")
         print("  - history       : Display the calculation history for this session.")
         print("  - clear         : Clear the session history.")
         print("  - undo / redo   : Undo or redo the last calculation.")
-        print("  - save / load   : Manually save or load the session history to/from a CSV file.")
+        print("  - save / load   : Manually save or load the session history.")
         print("  - help          : Show this help message.")
         print("  - exit          : Exit the application.")
