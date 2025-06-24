@@ -1,4 +1,3 @@
-# app/history.py
 
 from app.calculator_memento import CalculatorMemento
 

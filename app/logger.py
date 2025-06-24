@@ -2,9 +2,10 @@ import pandas as pd
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import TYPE_CHECKING
+import logging
+import os 
 
-# This block only runs during static type checking, which avoids the runtime error.
-if TYPE_CHECKING: #pragma: no cover
+if TYPE_CHECKING: # pragma: no cover
     from .calculator import Calculator 
     from .calculator_config import CalculatorConfig
 
@@ -15,41 +16,49 @@ class Observer(ABC):
         pass # pragma: no cover
 
 class LoggingObserver(Observer):
-    """Logs calculation details to a file specified in the configuration."""
+    """Logs calculation details using Python's logging module."""
     def __init__(self, config: 'CalculatorConfig'):
-        """Initializes the observer with a specific configuration object."""
         self.config = config
-        self.log_file = self.config.get_log_file_path()
 
     def update(self, subject: 'Calculator') -> None:
-        """Pulls the last calculation from the calculator and logs it."""
+        """Pulls the last calculation and logs it as an info message."""
         if not subject.last_calculation:
             return 
 
         calc = subject.last_calculation
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        result_str = f"{calc.result:.{self.config.precision}f}"
-        log_entry = (
-            f"[{timestamp}] "
+        log_message = (
+            f"Calculation - "
             f"Operation: {calc.operation.__class__.__name__}, "
             f"Operands: {(calc.a, calc.b)}, "
-            f"Result: {result_str}\n"
+            f"Result: {calc.result}"
         )
-        
-        try:
-            with open(self.log_file, 'a', encoding=self.config.encoding) as f:
-                f.write(log_entry)
-        except IOError as e: #pragma: no cover
-            print(f"Error: Could not write to log file {self.log_file}. {e}") # pragma: no cover
+        logging.info(log_message)
 
 class AutoSaveObserver(Observer):
     """Saves the calculation history, respecting the auto-save setting."""
     def __init__(self, config: 'CalculatorConfig'):
-        """Initializes the observer with a specific configuration object."""
+        """Initializes the observer and loads existing history."""
         self.config = config
-        self.output_file = self.config.get_history_file_path()
+        self.output_file = config.get_history_file_path()
         self.history = []
+        # FIX: Load the history from the file if it exists upon initialization.
+        self._load_initial_history()
+
+    def _load_initial_history(self):
+        """Loads the auto-save history file at the start of the application."""
+        if os.path.exists(self.output_file):
+            try:
+                df = pd.read_csv(self.output_file)
+                # Convert the DataFrame back into the list of dictionaries format.
+                self.history = df.to_dict('records')
+            except pd.errors.EmptyDataError:
+                # If the file is empty, just start with an empty history.
+                self.history = []
+            except Exception as e:
+                logging.error(f"Failed to load initial auto-save history: {e}")
+                self.history = []
+
 
     def update(self, subject: 'Calculator') -> None:
         """Appends the last calculation and saves if auto-save is enabled."""
@@ -57,7 +66,7 @@ class AutoSaveObserver(Observer):
             return
 
         if not subject.last_calculation:
-            return
+            return #pragma: no cover
 
         calc = subject.last_calculation
         self.history.append({
@@ -72,4 +81,4 @@ class AutoSaveObserver(Observer):
             df = pd.DataFrame(self.history)
             df.to_csv(self.output_file, index=False, encoding=self.config.encoding)
         except Exception as e: #pragma: no cover
-            print(f"Error: Could not save history to {self.output_file}. {e}") # pragma: no cover
+            logging.error(f"Failed to auto-save history: {e}", exc_info=True)

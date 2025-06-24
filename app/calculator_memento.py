@@ -1,4 +1,3 @@
-# app/calculator_memento.py
 
 class CalculatorMemento:
     """The Memento object that stores the state of the calculator's result."""

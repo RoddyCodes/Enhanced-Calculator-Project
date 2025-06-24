@@ -1,7 +1,5 @@
-# tests/test_calculation.py
 
 from app.calculation import Calculation
-# Correctly import the 'Add' class, which matches your operations file.
 from app.operations import Add
 
 def test_calculation_string_representation():
@@ -9,7 +7,7 @@ def test_calculation_string_representation():
     Tests the __str__ method of the Calculation class to ensure it formats
     the output string correctly.
     """
-    # 1. Setup: Use the correct 'Add' class
+    # 1. Setup: Use the  'Add' class
     add_operation = Add()
     calculation = Calculation(10, 5, add_operation, 15)
     
@@ -17,7 +15,7 @@ def test_calculation_string_representation():
     result_string = str(calculation)
     
     # 3. Assert: Check if the string matches the expected format.
-    # Your __str__ method uses .lower(), so 'Add' becomes 'add'.
+    #  __str__ method uses .lower(), so 'Add' becomes 'add'.
     expected_string = "10 add 5 = 15"
     assert result_string == expected_string
 

@@ -1,4 +1,3 @@
-# app/calculation.py
 
 from app.operations import Operation
 

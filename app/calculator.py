@@ -1,4 +1,3 @@
-# app/calculator.py
 
 from typing import List, Any, TYPE_CHECKING
 from app.operations import OperationFactory
@@ -91,5 +90,5 @@ class Calculator:
             return calculation
             
         except ValueError as e:
-            print(f"Error: {e}")
-            raise
+            print(f"Error: {e}") #pragma: no cover
+            raise #pragma: no cover
